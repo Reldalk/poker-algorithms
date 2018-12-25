@@ -277,20 +277,24 @@ function dealtAStraight(valuesHeld){
 }
 
 function checkStraight(valuesHeld, gap){
+  //resets values of variables if there are gaps
   let resetCounter = 0;
+  //normal i function to count loops
   let counter = 0;
   let i;
+  //counts how long the straight. does not reset unless resetCounter > gap
   let straightCounter = 0;
   let returnArray = [];
   let mask;
   let straightChecker = valuesHeld[0] | valuesHeld[1] | valuesHeld[2] | valuesHeld[3] | valuesHeld[4];
+  //if 0 breaks loop
   while(straightChecker > 0){
+    //checks if the one bit is on
     if(straightChecker & 1){
+      //gets the position of the value in the valuesHeld array as the order can be randomized
       for(i = 0; i < valuesHeld.length; i++){
         mask = 1 << counter;
-        console.log(mask);
         if(valuesHeld[i] & mask){
-          console.log('breaking at: ' + i);
           break;
         }
       }
@@ -299,9 +303,15 @@ function checkStraight(valuesHeld, gap){
       resetCounter = 0;
     }
     else{
+      //if one bit is off increment reset counter
       resetCounter++;
     }
-    if(straightCounter === (5-(gap - 1))){
+    //4 is the 0 based size of the hand
+    console.log('----------------');
+    console.log(straightCounter);
+    console.log(5 - (gap - 1));
+    console.log('----------------');
+    if(straightCounter === (5-(gap-1))){
       return returnArray;
     } 
     if(resetCounter === gap){
@@ -350,11 +360,9 @@ function twoPair(suitsHeld, valuesHeld){
 function highPair(valuesHeld){
   let position = -1;
   for(let i = 0; i < pairBuckets.length; i++){
-    console.log(pairBuckets[i] & 2);
     if(pairBuckets[i] & 2)
       position = i;
   }
-  console.log(position);
   if(position === -1)
     return null;
   position = 1 << position;
@@ -369,7 +377,125 @@ function highPair(valuesHeld){
 }
 
 function threeToRoyalFlush(suitsHeld, valuesHeld){
-  
+  let i;
+  for(i = 0; i < flushBuckets.length; i++){
+    if(flushBuckets[i] === 3)
+      break;
+  }
+  if(i === flushBuckets.length)
+    return null;
+  let suitType = 1 << i;
+  console.log(suitType);
+  let returnArray = [];
+  for(i = 0; i < suitsHeld.length; i++){
+    console.log(valuesHeld[i]);
+    if(parseInt(suitsHeld[i]) & suitType){
+      if(parseInt(valuesHeld[i]) > 256)
+        returnArray.push(i);
+      else
+        return null;
+    }
+  }
+  return returnArray;
+}
+
+function fourToAFlush(suitsHeld, valueHeld){
+  let i;
+  for(i = 0; i < flushBuckets.length; i++){
+    //don't have to worry about anything above 4 since it's covered in previous cases
+    if(flushBuckets[i] & 4)
+      break;
+  }
+  if(i === flushBuckets.length)
+    return null;
+  let suitType = 1 << i;
+  console.log(suitType);
+  let returnArray = [];
+  for(let i = 0; i < suitsHeld.length; i++){
+    if(suitsHeld[i] & suitType)
+      returnArray.push(i);
+  } 
+  return returnArray;
+}
+
+function UnsuitedTenJackQueenKing(valuesHeld){
+  let combinedValue = valuesHeld[0] | valuesHeld[1] | valuesHeld[2] | valuesHeld[3] | valuesHeld[4];
+  let returnArray = [];
+  console.log(combinedValue);
+  //any cases where it's not unsuited or there are doubles are handled above.
+  if((combinedValue & 3840) === 3840){
+    for(let i = 0; i < valuesHeld.length; i++){
+      if(valuesHeld[i] > 128)
+        returnArray.push(i);
+    }
+  }
+  else
+    return null;
+  return returnArray;
+}
+
+function lowPair(valuesHeld){
+  //Any case for triple or quad pairs are handled above
+  let i;
+  for(i = 0; i < pairBuckets.length; i++){
+    if(pairBuckets[i] & 2)
+      break;
+  }
+  if(i === pairBuckets.length)
+    return null;
+  let value = 1 << i;
+  let returnArray = [];
+  //Any high pairs are already handled above
+  for(let i = 0; i < valuesHeld.length; i++){
+    if(valuesHeld[i] & value)
+      returnArray.push(i);
+  }
+  return returnArray;
+}
+
+function fourToOutsideStraight(valuesHeld){
+  let positions = checkStraight(valuesHeld, 2);
+  if(!positions)
+    return null;
+  let combinedValues = 0;
+  for(let i = 0; i < positions.length; i++){
+    combinedValues |= valuesHeld[positions[i]];
+    if((valuesHeld[positions[i]] & 1) || (valuesHeld[positions[i]] & 4096))
+      return null;
+  }
+  let counter;
+  //make sure there is no gap in the middle. Then it wouldn't be an outside straight
+  while(combinedValues){
+    counter = 0;
+    while(combinedValues & 1){
+      counter ++;
+      combinedValues >>= 1;  
+    }
+    if(counter === 4)
+      return positions;
+    combinedValues >>= 1;  
+  }
+  return null;
+}
+
+function threeToTypeOneStraightFlush(suitsHeld, valuesHeld){
+  let highCardCount = 0;
+  for(let i = 0; i < valuesHeld.length; i++){
+    //Jack or greater
+    if(valuesHeld[i] > 256)
+      highCardCount++;
+  }
+  highCardCount+=1;
+  //high cards must be equal to or greater than the number of gaps.
+  let positions = checkStraight(valuesHeld, highCardCount);
+  if(!positions)
+    return null;
+  //anything above a 3 flush is already checked above.
+  if(suitsHeld[positions[0]] & suitsHeld[positions[1]] & suitsHeld[positions[2]]){
+    return positions;
+  }
+  return null;
+
 }
 
   //royalFlushChance(suitsHeld, valuesHeld);
@@ -432,9 +558,34 @@ function printWinningCombinationOdds(suitsHeld, valuesHeld){
     console.log('Dealt High Pair');
     return cardsToKeep;
   }
-  cardsToKeep = threeToRoyalFlush(valuesHeld, suitsHeld);
+  cardsToKeep = threeToRoyalFlush(suitsHeld, valuesHeld);
   if(cardsToKeep){
     console.log('Dealt Three to Royal Flush');
+    return cardsToKeep;
+  }
+  cardsToKeep = fourToAFlush(suitsHeld, valuesHeld);
+  if(cardsToKeep){
+    console.log('Dealt Four to a Flush');
+    return cardsToKeep;
+  }
+  cardsToKeep = UnsuitedTenJackQueenKing(valuesHeld);
+  if(cardsToKeep){
+    console.log('Dealt an Unsuited Ten, Jack, Queen, and King');
+    return cardsToKeep;
+  }
+  cardsToKeep = lowPair(valuesHeld);
+  if(cardsToKeep){
+    console.log('Dealt a low Pair');
+    return cardsToKeep;
+  }
+  cardsToKeep = fourToOutsideStraight(valuesHeld);
+  if(cardsToKeep){
+    console.log('Dealt 4 cards to an outside straight');
+    return cardsToKeep;
+  }
+  cardsToKeep = threeToTypeOneStraightFlush(suitsHeld, valuesHeld);
+  if(cardsToKeep){
+    console.log('Dealt 3 cards to type one straight flush');
     return cardsToKeep;
   }
 }
