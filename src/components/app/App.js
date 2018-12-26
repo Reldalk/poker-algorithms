@@ -11,8 +11,8 @@ class App extends Component {
   constructor(props){
     super(props);
     this.state={
-      currentValues: [1,1024,4,2048,512],
-      currentSuits: [1,2,4,8,4],
+      currentValues: [1,1,1,1,1],
+      currentSuits: [1,1,1,1,1],
     }
   }
 
