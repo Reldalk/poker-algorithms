@@ -305,6 +305,7 @@ function checkStraight(valuesHeld, gap){
   let returnArray = [];
   let mask;
   let straightChecker = orArray(valuesHeld);
+  console.log(straightChecker);
   //if 0 breaks loop
   while(straightChecker > 0){
     //checks if the one bit is on
@@ -312,6 +313,7 @@ function checkStraight(valuesHeld, gap){
       //gets the position of the value in the valuesHeld array as the order can be randomized
       for(i = 0; i < valuesHeld.length; i++){
         mask = 1 << counter;
+        console.log(valuesHeld[i] + ' : ' + mask);
         if(valuesHeld[i] & mask){
           break;
         }
@@ -516,214 +518,157 @@ function threeToTypeOneStraightFlush(suitsHeld, valuesHeld){
   return returnArray;
 }
 
-function suitedQueenJack(suitsHeld, valuesHeld){
-  let returnArray = [];
+function twoSuitedHighCards(suitsHeld, valuesHeld){
+  let suitArray = [];
   for(let i = 0; i < valuesHeld.length; i++){
-    if(valuesHeld[i] & 1536)
-      returnArray.push(i);
+    if(valuesHeld[i] > 256){
+      suitArray.push(i);
+    }
   }
-  //anything higher results in a high pair.
-  if(!(returnArray.length & 2))
-    return null;
-  if(suitsHeld[returnArray[0]] & suitsHeld[returnArray[1]])
-    return returnArray;
+  for(let i = 0; i < suitArray.length - 1; i++){
+    for(let j = i + 1; j < suitArray.length; j++){
+      if(suitsHeld[suitArray[i]] & suitsHeld[suitArray[j]]){
+        return[i, j];
+      }
+    }
+  }
   return null;
 }
 
-function fourInsideStraightFourHighCards(suitsHeld, valuesHeld){
-  const combined = orArray(valuesHeld, 256);
-  console.log(combined);
-  if(combined !== 7680)
-    return null
-  let returnArray = [];
-  return returnKeptCards(valuesHeld, combined);
-}
-
-function findCardsPositions(valuesHeld, values){
-  let returnArray = [];
-  for(let i = 0; i < valuesHeld.length; i++){
-    if(valuesHeld[i] & values)
-      returnArray.push(i);
+function threeToStraightFlush(suitsHeld, valuesHeld){
+  const suitType = checkIfFlush(3);
+  if(!suitType)
+    return null;
+  let straightChecker = [];
+  for(let i = 0; i < suitsHeld.length; i++){
+    if(suitsHeld[i] & suitType)
+      straightChecker.push(1 << i);
   }
+  console.log(straightChecker);
+  let returnArray = checkStraight(straightChecker, 2);
   return returnArray;
 }
 
-function suitedKingQueenOrKingJack(suitsHeld, valuesHeld){
+function twoUnsuitedHighCards(suitsHeld, valuesHeld){
   const combined = orArray(valuesHeld);
-  if(combined & 2560){
-    let jackKing = findCardsPositions(valuesHeld, 2560);
-    if(suitsHeld[jackKing[0]] & suitsHeld[jackKing[1]])
-      return[jackKing[0], jackKing[1]];
+  if(combined < 1536){
+    return null;
   }
-  if(combined & 3072){
-    let queenKing = findCardsPositions(valuesHeld, 3072);
-    if(suitsHeld[queenKing[0]] & suitsHeld[queenKing[1]])
-      return[queenKing[0], queenKing[1]];
+  const highCardArray = returnKeptCards(valuesHeld, 7680);
+  console.log('these are the returned cards: ' + highCardArray);
+  if(highCardArray.length < 3)
+    return highCardArray;
+  let minOne = Number.MAX_SAFE_INTEGER;
+  let minTwo = Number.MAX_SAFE_INTEGER;
+  let returnArray = [-1, -1];
+  //pick the lower of the two;
+  for(let i = 0; i < highCardArray.length; i++){
+    console.log(valuesHeld[highCardArray[i]] + ' < ' + minOne + ' = ' + valuesHeld[highCardArray[i]] < minOne )
+    if(valuesHeld[highCardArray[i]] < minOne){
+      minTwo = minOne;
+      minOne = valuesHeld[highCardArray[i]];
+      returnArray[1] = returnArray[0];
+      returnArray[0] = highCardArray[i];
+    }
+    else if(valuesHeld[highCardArray[i]] < minTwo){
+      minTwo = valuesHeld[highCardArray[i]];
+      returnArray[1] = highCardArray[i];
+    }
   }
-  return null;
+  return returnArray;
+
 }
 
-function suitedAceKingAceQueenOrAceJack(suitsHeld, valuesHeld){
-  const combined = orArray(valuesHeld);
-  if(combined & 4608){
-    let jackAce = findCardsPositions(valuesHeld, 4608);
-    if(suitsHeld[jackAce[0]] & suitsHeld[jackAce[1]])
-      return[jackAce[0], jackAce[1]];
-  }
-  if(combined & 5120){
-    let queenAce = findCardsPositions(valuesHeld, 5120);
-    if(suitsHeld[queenAce[0]] & suitsHeld[queenAce[1]])
-      return[queenAce[0], queenAce[1]];
-  }
-  if(combined & 6144){
-    let kingAce = findCardsPositions(valuesHeld, 6144);
-    if(suitsHeld[kingAce[0]] & suitsHeld[kingAce[1]])
-      return[kingAce[0], kingAce[1]];
-  }
-  return null;
-}
-
-function fourToInsideStraightThreeHigh(suitsHeld, valuesHeld){
-const combined = orArray(valuesHeld);
- /* A K Q ? 10 7424 */
-if((combined & 7424) === 7424){
-  return returnKeptCards(valuesHeld, 7424);
-}
- /*  A K ? J 10 6912 */
-else if((combined & 6912) === 6912){
-  return returnKeptCards(valuesHeld, 6912);
-}
- /* A ? Q J 10 5888 */
-else if((combined & 5888) === 5888){
-  return returnKeptCards(valuesHeld, 5888);
-}
- /* K Q J ? 9  3712 */
-else if((combined & 3712) === 3712){
-  return returnKeptCards(valuesHeld, 3712);
-}
-else{
-  return null;
-}
-}
-
-  //royalFlushChance(suitsHeld, valuesHeld);
-  //pairsChance(suitsHeld, valuesHeld);
-  //flushChance(suitsHeld, valuesHeld);
 function printWinningCombinationOdds(suitsHeld, valuesHeld){
   let cardsToKeep = null;
-  cardsToKeep = dealtRoyalFlush(suitsHeld, valuesHeld);
+  cardsToKeep = dealtRoyalFlush(suitsHeld, valuesHeld); //step 1
   if(cardsToKeep){
     console.log('Dealt Royal Flush');
     return cardsToKeep;
   }
-  cardsToKeep = dealtStraightFlush(suitsHeld, valuesHeld);
+  cardsToKeep = dealtStraightFlush(suitsHeld, valuesHeld); //step 1
   if(cardsToKeep){
     console.log('Dealt straight flush');
     return cardsToKeep;
   }
-  cardsToKeep = dealtFourOfAKind(suitsHeld, valuesHeld);
+  cardsToKeep = dealtFourOfAKind(suitsHeld, valuesHeld); //step 1
   if(cardsToKeep){
     console.log('Dealt Four of a Kind')
     return cardsToKeep;
   }
-  cardsToKeep = fourToRoyal(suitsHeld, valuesHeld);
+  cardsToKeep = fourToRoyal(suitsHeld, valuesHeld); //step 2
   if(cardsToKeep){
     console.log('Dealt four to a Royal');
     return cardsToKeep;
   }
-  cardsToKeep = dealtFullHouse();
+  cardsToKeep = dealtFullHouse();//step 3
   if(cardsToKeep){
     console.log('Dealt Full House');
     return cardsToKeep;
   }
-  cardsToKeep = dealtFlush();
+  cardsToKeep = dealtFlush();//step 3
   if(cardsToKeep){
     console.log('Dealt a Flush');
     return cardsToKeep;
   }
-  cardsToKeep = dealtThreeOfKind(valuesHeld);
+  cardsToKeep = dealtThreeOfKind(valuesHeld);//step 3
   if(cardsToKeep){
     console.log('Dealt Three of a Kind');
     return cardsToKeep;
   }
-  cardsToKeep = dealtAStraight(valuesHeld);
+  cardsToKeep = dealtAStraight(valuesHeld);//step 3
   if(cardsToKeep){
     console.log('Dealt a Straight');
     return cardsToKeep;
   }
-  cardsToKeep = fourToStraightFlush(suitsHeld, valuesHeld);
+  cardsToKeep = fourToStraightFlush(suitsHeld, valuesHeld);//step 4
   if(cardsToKeep){
     console.log('Dealt 4 to a straight flush');
     return cardsToKeep;
   }
-  cardsToKeep = twoPair(suitsHeld, valuesHeld);
+  cardsToKeep = twoPair(suitsHeld, valuesHeld);//step 5
   if(cardsToKeep){
     console.log('Dealt Two Pair');
     return cardsToKeep;
   }
-  cardsToKeep = highPair(valuesHeld);
+  cardsToKeep = highPair(valuesHeld);//step 6
   if(cardsToKeep){
     console.log('Dealt High Pair');
     return cardsToKeep;
   }
-  cardsToKeep = threeToRoyalFlush(suitsHeld, valuesHeld);
+  cardsToKeep = threeToRoyalFlush(suitsHeld, valuesHeld);//step 7
   if(cardsToKeep){
     console.log('Dealt Three to Royal Flush');
     return cardsToKeep;
   }
-  cardsToKeep = fourToAFlush(suitsHeld, valuesHeld);
+  cardsToKeep = fourToAFlush(suitsHeld, valuesHeld);//step 8
   if(cardsToKeep){
     console.log('Dealt Four to a Flush');
     return cardsToKeep;
   }
-  cardsToKeep = UnsuitedTenJackQueenKing(valuesHeld);
-  if(cardsToKeep){
-    console.log('Dealt an Unsuited Ten, Jack, Queen, and King');
-    return cardsToKeep;
-  }
-  cardsToKeep = lowPair(valuesHeld);
+  cardsToKeep = lowPair(valuesHeld);//step 9
   if(cardsToKeep){
     console.log('Dealt a low Pair');
     return cardsToKeep;
   }
-  cardsToKeep = fourToOutsideStraight(valuesHeld);
+  cardsToKeep = fourToOutsideStraight(valuesHeld);//step 10
   if(cardsToKeep){
     console.log('Dealt 4 cards to an outside straight');
     return cardsToKeep;
   }
-  cardsToKeep = threeToTypeOneStraightFlush(suitsHeld, valuesHeld);
+  cardsToKeep = twoSuitedHighCards(suitsHeld, valuesHeld);//step 11 modify
   if(cardsToKeep){
-    console.log('Dealt 3 cards to type one straight flush');
+    console.log('Dealt two suited high cards');
     return cardsToKeep;
   }
-  cardsToKeep = suitedQueenJack(suitsHeld, valuesHeld);
+  cardsToKeep = threeToStraightFlush(suitsHeld, valuesHeld);//step 11 modify
   if(cardsToKeep){
-    console.log('Dealt Suited Queen, Jack');
+    console.log('Dealt three to a straight flush');
     return cardsToKeep;
   }
-  cardsToKeep = fourInsideStraightFourHighCards(suitsHeld, valuesHeld);
+  cardsToKeep = twoUnsuitedHighCards(suitsHeld, valuesHeld);//step 11 modify
   if(cardsToKeep){
-    console.log('Dealt a 4 card inside straight with 4 high cards');
-    return cardsToKeep;
-  }
-  cardsToKeep = suitedKingQueenOrKingJack(suitsHeld, valuesHeld);
-  if(cardsToKeep){
-    console.log('Dealt a suited King and Queen or a suited King and Jack');
-    return cardsToKeep;
-  }
-  cardsToKeep = suitedAceKingAceQueenOrAceJack(suitsHeld, valuesHeld); //step #21
-  if(cardsToKeep){
-    console.log('Dealt a suited Ace with a Jack, Queen, or King');
-    return cardsToKeep;
-  }
-  cardsToKeep = fourToInsideStraightThreeHigh(suitsHeld, valuesHeld); 
-  if(cardsToKeep){
-    console.log('Dealt four to an inside straight with three high cards');
-    return cardsToKeep;
-  }
-  cardsToKeep = fourToInsideStraightThreeHigh(suitsHeld, valuesHeld); 
-  if(cardsToKeep){
-    console.log('Dealt three to a straight flush type 2');
+    console.log('Dealt two unsuited high cards');
     return cardsToKeep;
   }
 }

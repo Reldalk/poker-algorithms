@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import './App.css';
-import {calculateChances} from '../algorithms/calculateChances'
+import {calculateChances} from '../algorithms/simple'
 const maskArray = [1,2,4,8,16,32,64,128,256,512,1024,2048, 4096]
 const cardArray = [2,3,4,5,6,7,8,9, 10,'J','Q', 'K', 'A'];
 const suitArray = ['Clubs', 'Spades', 'Hearts', 'Diamonds'];
@@ -11,8 +11,8 @@ class App extends Component {
   constructor(props){
     super(props);
     this.state={
-      currentValues: [1024,512,256,2,4],
-      currentSuits: [1,1,1,8,4],
+      currentValues: [1,1024,4,2048,512],
+      currentSuits: [1,2,4,8,4],
     }
   }
 
